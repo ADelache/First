@@ -17,14 +17,14 @@ var (
 	secretKey = "entrer votre API"
 )
 
-/// Pour retourner la data de binance
+/// Pour retourner la data de binance ic
 func get_data(b string) []*binance.Kline { // on récupere ce type là qui est un ptr slice
 	client := binance.NewClient(apiKey, secretKey)
 	data, _ := client.NewKlinesService().Symbol("BTCUSDT").
 		Interval(b).Limit(1000).Do(context.Background())
 	Start := data[0].OpenTime - 6 /// changer le 6 selon le tmps 6=60s 360=1h etc...
 	lendata := len(data)
-	for i := 0; i < 70; i++ {
+	for i := 0; i < 70; i++ { ///// Changer le 70 pour la taille de la data ici c'est 71000 éléments de 1min
 		datab, _ := client.NewKlinesService().Symbol("BTCUSDT").Interval(b).Limit(1000).EndTime(Start).Do(context.Background())
 		for i := 0; i < lendata; i++ {
 			data = append(data, datab[i])
@@ -73,7 +73,7 @@ func converstruct(klines []*binance.Kline) interface{} {
 	return data
 }
 
-//////Fonction d'affichage d'un Tableau
+//////Fonction d'affichage d'un Tableau 
 func printtab(tab []int64) {
 	for _, k := range tab {
 		fmt.Println(k)
@@ -82,7 +82,9 @@ func printtab(tab []int64) {
 }
 
 /////Fonction backtest pour le type []*binance.kline
-func backtest1(tab []int64, tab2 []int64, b string, klines []*binance.Kline) {
+//// tab doit être un tableau avec les times d'achats
+//// tab2 doit être un tableau avec les times de ventes
+func backtest1(tab []int64, tab2 []int64, klines []*binance.Kline) {
 	lentab := len(tab)
 	var tabretour []int64
 	a := len(klines)
@@ -137,10 +139,11 @@ func backtest1(tab []int64, tab2 []int64, b string, klines []*binance.Kline) {
 	wa2 := 10000.000
 	rt := (gf - gi) / gi
 	wa2 = wa2 + rt*wa2
-	fmt.Println("Le portfeuille sans bot", wa2)
+	fmt.Println("Le portfeuille sans bot", wa2) 
+	//Cela nous montre si on avait passer un ordre d'achat au dévut de la data et de vente à la fin
 }
 
-//// FOnction pour convertir la Data en 0 et 1
+//// Fonction pour convertir la Data en 0 et 1, notamment pour du machine learning
 func Dataconvert(b string) []int64 {
 	klines := get_data(b)
 	a := len(klines)
@@ -160,7 +163,7 @@ func Dataconvert(b string) []int64 {
 	}
 	return tabtran
 }
-
+///Algo test pour tester nos fonctions, le but est de chercher deux klines de suite égaux sur certains points
 func Lesklinesegaux(b string, klines []*binance.Kline) { //Petit algo pour des klines égaux
 	var tabachat []int64
 	var tabvente []int64
@@ -181,16 +184,17 @@ func Lesklinesegaux(b string, klines []*binance.Kline) { //Petit algo pour des k
 		}
 
 	}
-
-	backtest1(tabachat, tabvente, b, klines)
+///On test sur notre backtest
+	backtest1(tabachat, tabvente, klines)
 
 }
 
-///// Fonction main
+///// Fonction main////////////
 func main() {
-	klines := get_data("1m")
-	data := converstruct(klines)
-	df := dataframe.LoadStructs(data)
-	fmt.Println(df)
-	Lesklinesegaux("1m", klines)
+	
+	klines := get_data("1m") // On recupère la data en 1m
+	data := converstruct(klines) // on convertie la data 
+	df := dataframe.LoadStructs(data) // on convertie en dataframe
+	fmt.Println(df) // on affiche
+	Lesklinesegaux("1m", klines) // on applique notre algo
 }
